@@ -1,0 +1,1 @@
+window.OPENBELL_CFG={NAME:"OPENBELL",TICKER:"OPENBELL",CA:"",CHAIN:"solana",PAD:"pumpfun",X:"",BUY:"",CHART:"",TREASURY:""};

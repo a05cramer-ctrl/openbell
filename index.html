@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>OPENBELL · $OPENBELL</title>
+<meta name="description" content="Live gap board for every tokenized US stock on Solana, plus a treasury that buys the deepest discount before the opening bell and burns $OPENBELL with the profit.">
+<meta name="theme-color" content="#0B0F0C">
+<meta property="og:title" content="OPENBELL · $OPENBELL">
+<meta property="og:description" content="Live gap board for every tokenized US stock on Solana, plus a treasury that buys the deepest discount before the opening bell and burns $OPENBELL with the profit.">
+<meta property="og:image" content="og.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="og.jpg">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600&family=Tiny5&display=swap">
+<style>:root{
+  --bg:#0B0F0C;--bg2:#0E1511;--panel:#0D1410;--panel2:#101a14;--line:#1B3125;--line2:#2B4D3A;
+  --g:#86EFAC;--neon:#00FF88;--hot:#F2FFF6;--txt:#E3F3E9;--mut:#8BA596;--dim:#5D7767;--warn:#FFB86B;
+  --px:'Tiny5','Martian Mono',ui-monospace,monospace;--mono:'Martian Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B0F0C;--txt:#E3F3E9}}
+:root[data-theme="dark"]{--bg:#0B0F0C;--txt:#E3F3E9}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{overflow-x:clip}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--txt);font:400 13px/1.65 var(--mono);
+  background-image:radial-gradient(rgba(134,239,172,.05) 1px,transparent 1.2px);background-size:6px 6px}
+a{color:var(--g)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.px{font-family:var(--px);letter-spacing:.02em;font-weight:400}
+
+/* pixel buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:0 18px;
+  font:400 15px/1 var(--px);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;cursor:pointer;
+  color:var(--bg);background:var(--g);border:0;
+  box-shadow:0 -3px 0 0 #3fbf75 inset,0 3px 0 0 #E8FFF0 inset,3px 0 0 0 var(--bg),-3px 0 0 0 var(--bg),0 0 0 3px #0a2a19,0 0 24px rgba(0,255,136,.25);
+  clip-path:polygon(3px 0,calc(100% - 3px) 0,calc(100% - 3px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,3px calc(100% - 3px),0 calc(100% - 3px),0 3px,3px 3px)}
+.btn:hover{background:#B4F7CD}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--g);box-shadow:0 0 0 2px var(--line2) inset}
+.btn.ghost:hover{background:rgba(134,239,172,.08)}
+.btn[disabled]{opacity:.55;cursor:default}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:20;background:rgba(11,15,12,.86);backdrop-filter:blur(6px);border-bottom:2px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:18px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;min-height:44px;text-decoration:none;color:var(--hot);font:400 22px/1 var(--px);letter-spacing:.05em}
+.brand img{width:32px;height:32px;image-rendering:pixelated;box-shadow:0 0 0 2px var(--line2)}
+.nav nav{display:flex;gap:4px;margin-left:auto}
+.nav nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;color:var(--mut);text-decoration:none;font:400 15px/1 var(--px);letter-spacing:.06em}
+.nav nav a:hover{color:var(--g)}
+.nav .btn{min-height:44px;font-size:14px;padding:0 14px}
+
+/* hero */
+.hero{position:relative;overflow:hidden;min-height:max(620px,min(calc(100svh - 60px),860px));border-bottom:2px solid var(--line);isolation:isolate}
+.hero canvas#sky{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;z-index:-1}
+.hero .wrap{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);align-items:center;min-height:inherit;gap:24px}
+#stage{height:100%;min-height:560px;pointer-events:none}
+#bellbtn{position:absolute;z-index:2;border-radius:50%;background:transparent;border:0;cursor:pointer;padding:0}
+#bellbtn:focus-visible{outline:3px dashed var(--neon);outline-offset:6px}
+.copy{padding:56px 0;max-width:600px}
+.chiprow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:22px}
+.chip{display:inline-flex;align-items:center;gap:10px;min-height:34px;padding:0 12px;font:400 15px/1 var(--px);letter-spacing:.08em;
+  background:#0a1a10;color:var(--g);box-shadow:0 0 0 2px var(--line2) inset}
+.chip i{width:10px;height:10px;background:var(--dim);display:block}
+.chip[data-state="OPEN"]{color:var(--bg);background:var(--neon);box-shadow:0 0 22px rgba(0,255,136,.45)}
+.chip[data-state="OPEN"] i{background:var(--bg);animation:blink 1s steps(2) infinite}
+.chip[data-state="WEEKEND"] i,.chip[data-state="HOLIDAY"] i,.chip[data-state="CLOSED"] i{background:var(--warn)}
+.chip-s{opacity:.75;font-size:13px}
+#nyclock{color:var(--mut);font-size:11px;letter-spacing:.08em}
+@keyframes blink{50%{opacity:0}}
+h1{font:400 clamp(34px,4vw,52px)/1.04 var(--px);letter-spacing:.01em;margin:0 0 18px;color:var(--hot);text-shadow:0 0 18px rgba(0,255,136,.35),3px 3px 0 #0b3a22}
+h1 em{font-style:normal;color:var(--neon)}
+.lede{color:var(--mut);max-width:48ch;margin:0 0 26px;font-size:13.5px}
+.lede b{color:var(--txt);font-weight:500}
+.cd{margin:0 0 26px;padding:16px 18px 18px;background:rgba(5,9,6,.72);box-shadow:0 0 0 2px var(--line2) inset,6px 6px 0 0 rgba(0,0,0,.35);max-width:520px}
+.cd-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font:400 14px/1.2 var(--px);letter-spacing:.08em;color:var(--g);margin-bottom:12px}
+.cd-top span:last-child{color:var(--mut)}
+#cd{display:block;height:clamp(46px,6vw,74px);width:auto;max-width:100%;image-rendering:pixelated;filter:drop-shadow(0 0 10px rgba(0,255,136,.45))}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.ca .ca-v{font-family:var(--mono);font-size:12px;letter-spacing:0;text-transform:none}
+#sound{position:absolute;right:24px;bottom:20px;z-index:3;min-height:44px;font-size:13px}
+#sound .dot{width:8px;height:8px;background:currentColor}
+#sound[aria-pressed="false"] .dot{opacity:.3}
+.hint{position:absolute;z-index:3;left:50%;bottom:20px;transform:translateX(-50%);color:var(--dim);font:400 13px/1 var(--px);letter-spacing:.1em;pointer-events:none}
+#toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:40;padding:12px 18px;background:var(--neon);color:var(--bg);font:400 18px/1 var(--px);letter-spacing:.08em;box-shadow:0 0 30px rgba(0,255,136,.55)}
+
+/* sections */
+section.block{padding:84px 0;border-bottom:2px solid var(--line)}
+.sh{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px 24px;margin-bottom:26px}
+.kick{font:400 14px/1 var(--px);letter-spacing:.14em;color:var(--neon);margin:0 0 10px}
+h2{font:400 clamp(28px,3.4vw,42px)/1.05 var(--px);margin:0;color:var(--hot);letter-spacing:.01em}
+.sh p{margin:8px 0 0;color:var(--mut);max-width:60ch}
+.panel{background:var(--panel);box-shadow:0 0 0 2px var(--line) inset}
+
+/* board */
+.boardbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{min-height:44px;padding:0 14px;background:transparent;border:0;box-shadow:0 0 0 2px var(--line) inset;color:var(--mut);cursor:pointer;font:400 14px/1 var(--px);letter-spacing:.08em}
+.filters button[aria-pressed="true"]{color:var(--bg);background:var(--g);box-shadow:none}
+#boardmeta{display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--mut);font-size:11.5px}
+#boardmeta b{color:var(--txt);font-weight:500}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+table{width:100%;border-collapse:collapse;min-width:680px}
+thead th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:0;border-bottom:2px solid var(--line2)}
+thead th button{display:flex;align-items:center;gap:6px;width:100%;min-height:46px;padding:0 14px;background:none;border:0;cursor:pointer;color:var(--mut);font:400 14px/1 var(--px);letter-spacing:.1em;text-transform:uppercase}
+thead th.n button{justify-content:flex-end}
+thead th button:hover{color:var(--g)}
+thead th[aria-sort="ascending"] button,thead th[aria-sort="descending"] button{color:var(--g)}
+.arr{font-size:9px;width:9px}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+tbody td small{display:block;color:var(--dim);font-size:10.5px;line-height:1.3}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tok{display:flex;align-items:center;gap:12px}
+.tok img,.mono-ic{width:28px;height:28px;flex:none;border-radius:50%;background:#132019;object-fit:cover}
+.mono-ic{display:grid;place-items:center;font:400 12px/1 var(--px);color:var(--g);border-radius:0;box-shadow:0 0 0 2px var(--line2) inset}
+.tok b{font-weight:600;color:var(--hot)}
+.tag{display:inline-block;margin-left:8px;padding:2px 6px;font:400 11px/1.2 var(--px);letter-spacing:.08em;font-style:normal;color:var(--bg);background:var(--neon);vertical-align:2px}
+td.gap{min-width:150px}
+.gv{font-weight:600}
+tr.neg .gv{color:var(--g)} tr.pos .gv{color:var(--txt)}
+tr.deep .gv{color:var(--neon)}
+.track{display:block;position:relative;height:6px;margin-top:6px;background:repeating-linear-gradient(90deg,var(--line) 0 2px,transparent 2px 4px)}
+.track::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;background:var(--line2)}
+.bar{position:absolute;top:0;bottom:0;width:var(--w)}
+.bar.l{right:50%;background:var(--g)} .bar.r{left:50%;background:var(--mut)}
+tr.deep .bar.l{background:var(--neon)}
+tr.target td{background:rgba(0,255,136,.07)}
+tr.target td:first-child{box-shadow:4px 0 0 0 var(--neon) inset}
+tbody tr:hover td{background:rgba(134,239,172,.04)}
+td.empty{text-align:center;color:var(--mut);padding:36px}
+#boardnote,#tnote{margin:10px 0 0;color:var(--warn);font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;color:var(--dim);font-size:11px}
+.legend b{color:var(--mut);font-weight:500}
+
+/* shimmer skeleton */
+.shim{display:inline-block;height:12px;background:linear-gradient(90deg,#132019 0,#1d3326 40%,#132019 80%);background-size:200% 100%;animation:sh 1.3s linear infinite;vertical-align:middle}
+.w1{width:120px}.w2{width:70px}.w3{width:110px}.w4{width:220px}
+tr.sk td{height:57px}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* treasury */
+.tgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.stat{padding:16px 18px}
+.stat span{display:block;font:400 13px/1 var(--px);letter-spacing:.1em;color:var(--mut);margin-bottom:10px}
+.stat b{font:400 22px/1.15 var(--px);color:var(--hot);letter-spacing:.02em;word-break:break-word}
+.stat small{font-size:13px;color:var(--mut)}
+.tcols{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:12px}
+.card{padding:20px}
+.card h3{font:400 16px/1 var(--px);letter-spacing:.1em;color:var(--g);margin:0 0 16px}
+.nt-sym{font:400 34px/1 var(--px);color:var(--hot);margin-bottom:12px;text-shadow:0 0 14px rgba(0,255,136,.35)}
+.nt-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.nt-row span{color:var(--mut)} .nt-row b{font-weight:500}
+.nt-row b.up{color:var(--neon)} .nt-row b.dn{color:var(--warn)}
+.card code{display:block;margin-top:14px;padding:10px 12px;background:#07100a;color:var(--g);font-size:11.5px;word-break:break-all;box-shadow:0 0 0 1px var(--line) inset}
+.nt-none{color:var(--mut);margin:0}
+.sol{display:inline-flex;min-height:44px;align-items:center}
+#thist{list-style:none;margin:0;padding:0;max-height:360px;overflow:auto}
+#thist li{display:grid;grid-template-columns:64px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+#thist li.empty{display:block;color:var(--mut);padding:18px 0;border:0}
+#thist .t{color:var(--dim);font-size:11px}
+#thist a{min-height:44px;display:inline-flex;align-items:center;font-size:12px}
+.ev{font:400 12px/1 var(--px);letter-spacing:.08em;padding:4px 6px;text-align:center;color:var(--bg);background:var(--g)}
+.ev.sell{background:var(--hot)} .ev.burn{background:var(--warn)}
+.tempty{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+.tempty .big{padding:28px;display:flex;flex-direction:column;justify-content:center;gap:14px;min-height:260px;
+  background:repeating-linear-gradient(135deg,rgba(134,239,172,.035) 0 6px,transparent 6px 12px),var(--panel)}
+.tempty .big p.px{font-size:clamp(22px,2.6vw,30px);line-height:1.15;color:var(--hot);margin:0}
+.tempty .big p{margin:0;color:var(--mut)}
+.tw{color:var(--mut);font-size:12px;margin-top:10px}
+
+/* how */
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:28px}
+.step{padding:20px}
+.step .no{font:400 40px/1 var(--px);color:var(--neon);text-shadow:0 0 14px rgba(0,255,136,.4)}
+.step h3{font:400 18px/1.1 var(--px);letter-spacing:.06em;color:var(--hot);margin:12px 0 8px}
+.step p{margin:0;color:var(--mut);font-size:12.5px}
+.example{padding:24px}
+.example h3{font:400 18px/1 var(--px);letter-spacing:.08em;color:var(--g);margin:0 0 6px}
+.example .sub{color:var(--dim);margin:0 0 18px;font-size:12px}
+.ex{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 18px;font-size:12.5px}
+.ex dt{color:var(--mut);padding:9px 0;border-bottom:1px dashed var(--line)}
+.ex dd{margin:0;padding:9px 0;border-bottom:1px dashed var(--line);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ex dd b{color:var(--neon);font-weight:600}
+.ex dd code{color:var(--g)}
+
+/* rules */
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rule{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;padding:18px 20px;align-items:start}
+.rule .k{font:400 24px/1 var(--px);color:var(--neon);min-width:92px}
+.rule h3{margin:0 0 4px;font:400 16px/1.15 var(--px);letter-spacing:.06em;color:var(--hot)}
+.rule p{margin:0;color:var(--mut);font-size:12.5px}
+.rule code{color:var(--g);font-size:11.5px;overflow-wrap:anywhere}
+
+footer{padding:44px 0 60px;color:var(--dim);font-size:11.5px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px 32px;justify-content:space-between;align-items:center}
+footer .links{display:flex;gap:8px;flex-wrap:wrap}
+footer .links a{min-height:44px;display:inline-flex;align-items:center;padding:0 8px;color:var(--mut)}
+
+@media (max-width:980px){
+  .tgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tcols,.tempty{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:760px){
+  .wrap{padding:0 16px}
+  .nav nav{display:none}
+  .nav .wrap{justify-content:space-between}
+  .hero{min-height:0}
+  .hero .wrap{grid-template-columns:minmax(0,1fr);gap:0;min-height:0}
+  #stage{order:-1;min-height:0;height:340px}
+  .copy{padding:4px 0 92px}
+  h1{font-size:34px}
+  .cd{padding:14px}
+  #sound{left:16px;right:auto;bottom:22px}
+  .hint{display:none}
+  section.block{padding:60px 0}
+  .rules{grid-template-columns:minmax(0,1fr)}
+  .rule .k{min-width:72px;font-size:20px}
+  .ex{grid-template-columns:minmax(0,1fr)}
+  .ex dt{border:0;padding-bottom:0}
+  #thist li{grid-template-columns:56px minmax(0,1fr) auto}
+  #thist .t{display:none}
+  table{min-width:600px}
+  tbody td:first-child,thead th:first-child{position:sticky;left:0;z-index:1;background:var(--panel2);max-width:150px;box-shadow:2px 0 0 0 var(--line)}
+  tbody td:first-child{padding:10px 10px}
+  .tok{gap:8px}.tok>div{min-width:0}
+  .tok small{overflow:hidden;text-overflow:ellipsis;max-width:96px}
+  .tag{display:block;width:max-content;margin:3px 0 0}
+  tbody td{padding:10px 10px}
+  tr.target td:first-child{background:#0f2418;box-shadow:4px 0 0 0 var(--neon) inset,2px 0 0 0 var(--line)}
+}
+@media (max-width:460px){
+  .steps,.tgrid{grid-template-columns:minmax(0,1fr)}
+  .cta .btn{flex:1 1 140px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="OPENBELL home"><img src="favicon.png" alt="" width="32" height="32">OPENBELL</a>
+    <nav aria-label="Sections"><a href="#board-s">BOARD</a><a href="#treasury">TREASURY</a><a href="#how">HOW</a><a href="#rules">RULES</a></nav>
+    <a class="btn" data-buy target="_blank" rel="noopener">BUY <span data-ticker>$OPENBELL</span></a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" aria-label="Opening bell">
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="copy">
+      <div class="chiprow">
+        <span class="chip" id="chip" data-state="CLOSED" role="status" aria-live="polite"><i></i><span class="chip-l">MARKET CLOSED</span><span class="chip-s" hidden></span></span>
+        <span id="nyclock" class="px">NEW YORK --:--:-- ET</span>
+      </div>
+      <h1>Wall Street sleeps.<br>Solana prices the <em>gap</em>.</h1>
+      <p class="lede">Tokenized US stocks trade on Solana around the clock. When the exchange is shut, their on-chain price drifts off the real last close. <b>OPENBELL tracks every gap live</b>, and its treasury buys the deepest discount before the bell and sells into the open. Profit buys back and burns <span data-ticker>$OPENBELL</span>.</p>
+      <div class="cd">
+        <div class="cd-top"><span id="cdlabel">NEXT OPENING BELL IN</span><span id="cdwhen"></span></div>
+        <canvas id="cd" width="1" height="9" role="img" aria-label="Countdown to the next opening bell"></canvas>
+      </div>
+      <div class="cta">
+        <a class="btn" data-buy target="_blank" rel="noopener">BUY <span data-ticker>$OPENBELL</span></a>
+        <button class="btn ghost ca" type="button" data-ca aria-label="Copy contract address"><span class="ca-v">CA</span></button>
+        <a class="btn ghost" data-chart target="_blank" rel="noopener">CHART</a>
+        <a class="btn ghost" data-x target="_blank" rel="noopener">X</a>
+      </div>
+    </div>
+    <div id="stage" aria-hidden="true"></div>
+  </div>
+  <button id="bellbtn" type="button" aria-label="Ring the opening bell"></button>
+  <button id="sound" class="btn ghost" type="button" aria-pressed="true"><i class="dot"></i><span>TAP FOR SOUND</span></button>
+  <div class="hint">CLICK THE BELL</div>
+</section>
+
+<section class="block" id="board-s" aria-labelledby="h-board">
+  <div class="wrap">
+    <div class="sh">
+      <div><p class="kick">01 / LIVE</p><h2 id="h-board">THE GAP BOARD</h2>
+      <p>Every tokenized stock on Solana: on-chain price against the real-world price. A negative gap means Solana is selling the stock below its last close.</p></div>
+    </div>
+    <div class="boardbar">
+      <div class="filters" role="group" aria-label="Filter">
+        <button type="button" data-f="all" aria-pressed="true">ALL</button>
+        <button type="button" data-f="xstock" aria-pressed="false">XSTOCKS</button>
+        <button type="button" data-f="backpack" aria-pressed="false">BACKPACK</button>
+      </div>
+      <div id="boardmeta"></div>
+    </div>
+    <div class="panel tscroll" id="board" tabindex="0" aria-label="Gap board table, scrolls sideways">
+      <table>
+        <thead><tr>
+          <th scope="col"><button type="button" data-k="symbol"><span class="lbl">Token</span><span class="arr"></span></button></th>
+          <th scope="col" class="n"><button type="button" data-k="gapBps"><span class="lbl">Gap</span><span class="arr"></span></button></th>
+          <th scope="col" class="n"><button type="button" data-k="onchain"><span class="lbl">On-chain</span><span class="arr"></span></button></th>
+          <th scope="col" class="n" id="th-real"><button type="button" data-k="real"><span class="lbl">Real close</span><span class="arr"></span></button></th>
+          <th scope="col" class="n"><button type="button" data-k="vol24h"><span class="lbl">24h vol</span><span class="arr"></span></button></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p id="boardnote" hidden></p>
+    <div class="legend"><span><b>Gap</b> = on-chain ÷ real − 1</span><span><b>Real</b> = last regular-session close while the exchange is shut, live price while it is open</span><span><b>Target</b> = deepest gap ≤ −1.50% with ≥ $50K 24h volume</span></div>
+  </div>
+</section>
+
+<section class="block" id="treasury" aria-labelledby="h-tre">
+  <div class="wrap">
+    <div class="sh"><div><p class="kick">02 / ON-CHAIN</p><h2 id="h-tre">TREASURY</h2>
+      <p>Creator fees fund one position at a time. Every buy, sell and burn carries an <code>OPENBELL|</code> memo you can check on Solscan.</p></div></div>
+
+    <div class="tempty" id="tempty" hidden>
+      <div class="panel big"><p class="px">The treasury makes its first buy after launch.</p><p>Its wallet, open position, live PnL, trade history and total $OPENBELL burned will appear here, read straight from chain.</p></div>
+      <div class="panel card"><h3>NEXT BUY TARGET · LIVE</h3><div id="nexttarget"></div><p class="tw">Picked by the same rules the treasury engine runs.</p></div>
+    </div>
+
+    <div id="tlive" hidden>
+      <div class="tgrid">
+        <div class="panel stat"><span>SOL IN TREASURY</span><b data-f="sol"></b></div>
+        <div class="panel stat"><span>REALIZED PNL</span><b data-f="realized"></b></div>
+        <div class="panel stat"><span>TOTAL BURNED</span><b data-f="burned"></b></div>
+        <div class="panel stat"><span>TRADES</span><b data-f="trades"></b></div>
+      </div>
+      <div class="tcols">
+        <div class="panel card"><h3>CURRENT POSITION</h3><div data-f="position"></div></div>
+        <div class="panel card"><h3>HISTORY · <a id="twallet" target="_blank" rel="noopener"></a></h3><ul id="thist"></ul></div>
+      </div>
+      <p id="tnote" hidden></p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="how" aria-labelledby="h-how">
+  <div class="wrap">
+    <div class="sh"><div><p class="kick">03 / MECHANIC</p><h2 id="h-how">HOW IT WORKS</h2></div></div>
+    <div class="steps">
+      <div class="panel step"><div class="no">01</div><h3>FEES IN</h3><p>The engine claims $OPENBELL's pump.fun creator fees (bonding curve and PumpSwap vaults), at most once an hour.</p></div>
+      <div class="panel step"><div class="no">02</div><h3>FIND THE GAP</h3><p>Every 60 s it rebuilds this board and takes the deepest discount: gap ≤ −1.50% and ≥ $50K 24h on-chain volume.</p></div>
+      <div class="panel step"><div class="no">03</div><h3>BUY THE DISCOUNT</h3><p>It swaps fees into that tokenized stock through Jupiter and stamps the gap in the memo.</p></div>
+      <div class="panel step"><div class="no">04</div><h3>BELL, SELL, BURN</h3><p>It sells once on-chain is within 0.30% of the real price, or after the next regular session closes. Profit buys $OPENBELL and burns it.</p></div>
+    </div>
+    <div class="panel example">
+      <h3>WORKED EXAMPLE</h3>
+      <p class="sub">Round numbers for a made-up ticker XYZx, so the maths is easy to follow. Swap fees left out.</p>
+      <dl class="ex">
+        <dt>Real close (Fri 16:00 ET)</dt><dd>$200.00</dd>
+        <dt>XYZx on Solana (Sat)</dt><dd>$196.00 · 24h volume $50,000 or more</dd>
+        <dt>Gap</dt><dd>196.00 ÷ 200.00 − 1 = −0.0200 = <b>−2.00% = −200 bps</b> ≤ −150 bps → buy</dd>
+        <dt>Buy</dt><dd>1.000 SOL of fees → XYZx · memo <code>OPENBELL|BUY|XYZx|-200</code></dd>
+        <dt>Mon 09:31 ET</dt><dd>XYZx $199.50 vs real $200.00 → gap −0.25%, inside ±0.30% → sell</dd>
+        <dt>Proceeds</dt><dd>1.000 SOL × 199.50 ÷ 196.00 = 1.017857142 SOL (SOL/USD unchanged)</dd>
+        <dt>Realized PnL</dt><dd>1,017,857,142 − 1,000,000,000 = <b>17,857,142 lamports</b> · memo <code>OPENBELL|SELL|XYZx|17857142</code></dd>
+        <dt>Burn</dt><dd>0.017857142 SOL buys $OPENBELL, every token received is burned · memo <code>OPENBELL|BURN|&lt;amount&gt;</code></dd>
+        <dt>Principal</dt><dd>1.000 SOL goes back to the fee budget for the next gap</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="rules" aria-labelledby="h-rules">
+  <div class="wrap">
+    <div class="sh"><div><p class="kick">04 / FIXED</p><h2 id="h-rules">RULES</h2></div></div>
+    <div class="rules">
+      <div class="panel rule"><div class="k">−1.50%</div><div><h3>ENTRY</h3><p>Buy only when on-chain trades at least 1.50% below the real price. Deepest gap wins; ties go to more volume.</p></div></div>
+      <div class="panel rule"><div class="k">$50K</div><div><h3>LIQUIDITY FLOOR</h3><p>Minimum 24h on-chain volume (Jupiter buy + sell) for a token to be a target.</p></div></div>
+      <div class="panel rule"><div class="k">±0.30%</div><div><h3>GAP-CLOSE EXIT</h3><p>Sell when on-chain is back within 0.30% of the real price.</p></div></div>
+      <div class="panel rule"><div class="k">16:00</div><div><h3>TIME EXIT</h3><p>Otherwise sell after the next regular session closes (13:00 ET on early-close days).</p></div></div>
+      <div class="panel rule"><div class="k">1</div><div><h3>ONE POSITION</h3><p>Fees only, one tokenized stock at a time, with a hard cap on size. Nothing else in the wallet is spent.</p></div></div>
+      <div class="panel rule"><div class="k">BURN</div><div><h3>PROFIT ONLY</h3><p>Realized profit buys back and burns $OPENBELL. A losing trade burns nothing; principal returns to the budget.</p></div></div>
+      <div class="panel rule"><div class="k">MEMO</div><div><h3>EVERY TX TAGGED</h3><p><code>OPENBELL|BUY|&lt;symbol&gt;|&lt;gap bps&gt;</code> · <code>OPENBELL|SELL|&lt;symbol&gt;|&lt;pnl lamports&gt;</code> · <code>OPENBELL|BURN|&lt;amount&gt;</code></p></div></div>
+      <div class="panel rule"><div class="k">NYSE</div><div><h3>REAL CALENDAR</h3><p>09:30 to 16:00 ET, Monday to Friday, with the NYSE 2026 to 2028 holidays and early closes. Stale real prices are never used.</p></div></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>Not affiliated with NYSE, xStocks or Backpack. Tokenized stocks track but are not the underlying shares.<br>Token logos load from Jupiter. © <span id="yr"></span> OPENBELL</div>
+    <div class="links"><a data-buy target="_blank" rel="noopener">pump.fun</a><a data-chart target="_blank" rel="noopener">Chart</a><a data-x target="_blank" rel="noopener">X</a></div>
+  </div>
+</footer>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>(()=>{var kt="America/New_York",Zt=new Set(["2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25","2027-01-01","2027-01-18","2027-02-15","2027-03-26","2027-05-31","2027-06-18","2027-07-05","2027-09-06","2027-11-25","2027-12-24","2028-01-17","2028-02-21","2028-04-14","2028-05-29","2028-06-19","2028-07-04","2028-09-04","2028-11-23","2028-12-25"]),ue=new Set(["2026-11-27","2026-12-24","2027-11-26","2028-07-03","2028-11-24"]),jt=[9,30],pe=[16,0],fe=[13,0],me=864e5,At;function ge(){return At||(At=new Intl.DateTimeFormat("en-US",{timeZone:kt,hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",weekday:"short"})),At}var ye={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};function nt(n){let t={};for(let e of ge().formatToParts(new Date(n)))t[e.type]=e.value;return{y:+t.year,m:+t.month,d:+t.day,h:+t.hour%24,mi:+t.minute,s:+t.second,wd:ye[t.weekday]}}function Xt(n,t,e,a=0,o=0){let i=Date.UTC(n,t-1,e,a,o),s=i;for(let r=0;r<3;r++){let c=nt(s),y=Date.UTC(c.y,c.m-1,c.d,c.h,c.mi,c.s);s=i-(y-s)}return s}var Jt=(n,t,e)=>`${n}-${String(t).padStart(2,"0")}-${String(e).padStart(2,"0")}`;function ut(n,t,e){let a=new Date(Date.UTC(n,t-1,e)).getUTCDay(),o=Jt(n,t,e);if(a===0||a===6||Zt.has(o))return null;let i=ue.has(o),[s,r]=i?fe:pe;return{day:o,open:Xt(n,t,e,jt[0],jt[1]),close:Xt(n,t,e,s,r),early:i}}function yt(n,t,e,a){let o=new Date(Date.UTC(n,t-1,e)+a*me);return[o.getUTCFullYear(),o.getUTCMonth()+1,o.getUTCDate()]}function be(n){let t=nt(n);for(let e=0;e<20;e++){let[a,o,i]=yt(t.y,t.m,t.d,e),s=ut(a,o,i);if(s&&s.close>n)return s}return null}function Qt(n){let t=nt(n);for(let e=0;e<20;e++){let[a,o,i]=yt(t.y,t.m,t.d,-e),s=ut(a,o,i);if(s&&s.close<=n)return s}return null}function gt(n){let t=nt(n);for(let e=0;e<20;e++){let[a,o,i]=yt(t.y,t.m,t.d,e),s=ut(a,o,i);if(s&&s.open>n)return s}return null}function Rt(n=Date.now()){let t=nt(n),e=ut(t.y,t.m,t.d),a=Jt(t.y,t.m,t.d),o=be(n),i=Qt(n),s,r=null;e&&n>=e.open&&n<e.close?s="OPEN":t.wd===0||t.wd===6?s="WEEKEND":Zt.has(a)?s="HOLIDAY":(s="CLOSED",r=e&&n<e.open?"PRE":"AFTER");let c=s==="OPEN"?gt(n)?.open??null:o?.open??null;return{now:n,state:s,phase:r,session:s==="OPEN"?e:null,nextOpen:c,nextOpenDay:s==="OPEN"?gt(n)?.day??null:o?.day??null,nextClose:o?.close??null,nextCloseEarly:!!o?.early,lastClose:i?.close??null,lastCloseDay:i?.day??null,etDay:a}}function te(n,t){let e=[],a=nt(n);for(let o=0;o<3;o++){let[i,s,r]=yt(a.y,a.m,a.d,o),c=ut(i,s,r);c&&(c.open>n&&c.open<=t&&e.push({type:"OPEN",at:c.open,day:c.day}),c.close>n&&c.close<=t&&e.push({type:"CLOSE",at:c.close,day:c.day,early:c.early}))}return e.sort((o,i)=>o.at-i.at)}var It=Object.freeze({MIN_VOL_USD:5e4,ENTRY_GAP_BPS:-150,EXIT_BAND_BPS:30,OPEN_REF_MAX_AGE_MS:20*6e4});function ee(n){return gt(n)?.close??null}var Dt={0:[".###.","#...#","#..##","#.#.#","##..#","#...#",".###."],1:["..#..",".##..","..#..","..#..","..#..","..#..",".###."],2:[".###.","#...#","....#","...#.","..#..",".#...","#####"],3:["####.","....#","....#",".###.","....#","....#","####."],4:["...#.","..##.",".#.#.","#..#.","#####","...#.","...#."],5:["#####","#....","####.","....#","....#","#...#",".###."],6:["..##.",".#...","#....","####.","#...#","#...#",".###."],7:["#####","....#","...#.","..#..",".#...",".#...",".#..."],8:[".###.","#...#","#...#",".###.","#...#","#...#",".###."],9:[".###.","#...#","#...#",".####","....#","...#.",".##.."],A:[".###.","#...#","#...#","#####","#...#","#...#","#...#"],B:["####.","#...#","#...#","####.","#...#","#...#","####."],C:[".###.","#...#","#....","#....","#....","#...#",".###."],D:["####.","#...#","#...#","#...#","#...#","#...#","####."],E:["#####","#....","#....","####.","#....","#....","#####"],F:["#####","#....","#....","####.","#....","#....","#...."],G:[".###.","#...#","#....","#.###","#...#","#...#",".####"],H:["#...#","#...#","#...#","#####","#...#","#...#","#...#"],I:[".###.","..#..","..#..","..#..","..#..","..#..",".###."],J:["..###","...#.","...#.","...#.","...#.","#..#.",".##.."],K:["#...#","#..#.","#.#..","##...","#.#..","#..#.","#...#"],L:["#....","#....","#....","#....","#....","#....","#####"],M:["#...#","##.##","#.#.#","#.#.#","#...#","#...#","#...#"],N:["#...#","#...#","##..#","#.#.#","#..##","#...#","#...#"],O:[".###.","#...#","#...#","#...#","#...#","#...#",".###."],P:["####.","#...#","#...#","####.","#....","#....","#...."],Q:[".###.","#...#","#...#","#...#","#.#.#","#..#.",".##.#"],R:["####.","#...#","#...#","####.","#.#..","#..#.","#...#"],S:[".####","#....","#....",".###.","....#","....#","####."],T:["#####","..#..","..#..","..#..","..#..","..#..","..#.."],U:["#...#","#...#","#...#","#...#","#...#","#...#",".###."],V:["#...#","#...#","#...#","#...#","#...#",".#.#.","..#.."],W:["#...#","#...#","#...#","#.#.#","#.#.#","#.#.#",".#.#."],X:["#...#","#...#",".#.#.","..#..",".#.#.","#...#","#...#"],Y:["#...#","#...#",".#.#.","..#..","..#..","..#..","..#.."],Z:["#####","....#","...#.","..#..",".#...","#....","#####"],x:[".....",".....","#...#",".#.#.","..#..",".#.#.","#...#"]," ":[".....",".....",".....",".....",".....",".....","....."],"-":[".....",".....",".....",".###.",".....",".....","....."],"+":[".....","..#..","..#..","#####","..#..","..#..","....."],".":[".....",".....",".....",".....",".....",".##..",".##.."],",":[".....",".....",".....",".....",".##..","..#..",".#..."],"%":["##...","##..#","...#.","..#..",".#...","#..##","...##"],$:["..#..",".####","#.#..",".###.","..#.#","####.","..#.."],":":[".....",".##..",".##..",".....",".##..",".##..","....."],"/":["....#","....#","...#.","..#..",".#...","#....","#...."],"|":["..#..","..#..","..#..","..#..","..#..","..#..","..#.."],"*":[".....","#.#.#",".###.","#####",".###.","#.#.#","....."],v:[".....",".....","#####",".###.","..#..",".....","....."],"^":[".....",".....","..#..",".###.","#####",".....","....."],">":[".#...","..#..","...#.","....#","...#.","..#..",".#..."]},at=5,bt=7;function ne(n){return Dt[n]||Dt[n.toUpperCase()]||Dt[" "]}function Ot(n,t=1){let e=n.length*(at+t),a=new Uint8Array(e*bt);for(let o=0;o<n.length;o++){let i=ne(n[o]);for(let s=0;s<bt;s++)for(let r=0;r<at;r++)i[s][r]==="#"&&(a[s*e+o*(at+t)+r]=1)}return{w:e,h:bt,bits:a}}function xt(n,t,e,a,o=1,i=1){for(let s=0;s<t.length;s++){let r=ne(t[s]);for(let c=0;c<bt;c++)for(let y=0;y<at;y++)r[c][y]==="#"&&n.fillRect(e+(s*(at+i)+y)*o,a+c*o,o,o)}}var se=(n,t=1,e=1)=>(n.length*(at+e)-e)*t;var xe=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(n=>(n+.5)/16),q=(n,t)=>xe[(t&3)*4+(n&3)],B=n=>[parseInt(n.slice(1,3),16),parseInt(n.slice(3,5),16),parseInt(n.slice(5,7),16)],m={bg:B("#0B0F0C"),bg2:B("#0F1A13"),glow1:B("#0F2618"),glow2:B("#123620"),cloudD:B("#161F19"),cloudM:B("#25352C"),cloudL:B("#384E41"),cloudH:B("#526B5A"),disc:B("#040705"),discIn:B("#08130C"),discIn2:B("#0C2014"),ringHot:B("#F2FFF6"),ring:B("#BFF7D3"),ringMid:B("#86EFAC"),ringGlow:B("#2DD47A"),ringDim:B("#1F6B43"),neon:B("#00FF88"),white:B("#FFFFFF"),ink:B("#07100A"),b0:B("#0B3A22"),b1:B("#15803D"),b2:B("#3BD178"),b3:B("#86EFAC"),b4:B("#C9F9DA"),b5:B("#FFFFFF"),arrow:B("#22F08A"),arrowHi:B("#B9FFD6")},Nt=[m.b0,m.b1,m.b2,m.b3,m.b4,m.b5];function oe(n){let t=n>>>0;return()=>(t=t*1664525+1013904223>>>0)/4294967296}var wt=class n{constructor(t,e,a={}){this.cv=t,this.stage=e,this.ctx=t.getContext("2d",{alpha:!1}),this.reduced=!!a.reduced,this.tape=Ot("OPENBELL   "),this.tapeOffset=0,this.angle=0,this.vel=0,this.ringUntil=0,this.ringStart=0,this.lastBellKey="",this.t0=performance.now(),this.resize()}setTape(t){this.tape=Ot(t)}resize(){let t=this.cv.parentElement.getBoundingClientRect(),e=Math.max(1,t.width),a=Math.max(1,t.height),o=e<640?2:3;this.S=o;let i=this.W=Math.ceil(e/o),s=this.H=Math.ceil(a/o);this.rf=o===3?2:1,this.cv.width=i*this.rf,this.cv.height=s*this.rf,this.cv.style.width=`${i*o}px`,this.cv.style.height=`${s*o}px`;let r=this.stage.getBoundingClientRect(),c=(r.left-t.left+r.width/2)/o,y=(r.top-t.top+r.height/2)/o;this.cx=Math.round(c),this.cy=Math.round(y);let l=Math.round(Math.min(r.width/o*.34,r.height/o*.36));this.R=Math.max(30,l),this.build()}hit(t,e){let a=t/this.S-this.cx,o=e/this.S-this.cy;return a*a+o*o<=(this.R+4)**2}discRectCss(){let t=(this.R+4)*this.S;return{x:this.cx*this.S-t,y:this.cy*this.S-t,d:t*2}}build(){let{W:t,H:e,cx:a,cy:o,R:i}=this,s=oe(7),r=new ImageData(t,e),c=r.data;for(let f=0;f<e;f++)for(let x=0;x<t;x++){let D=(f*t+x)*4,G=Math.hypot(x-a,f-o)/i,S=m.bg,F=Math.max(0,1-(G-1)/.55),R=f/e;Math.max(0,.18-R*.18)+(G>1?F*.75:0)>q(x,f)?S=F>.6&&G>1?m.glow2:m.glow1:.08>q(x+1,f+2)&&(x+f)%2===0&&(S=m.bg2),c[D]=S[0],c[D+1]=S[1],c[D+2]=S[2],c[D+3]=255}this.stars=[];let y=Math.round(t*e/900);for(let f=0;f<y;f++){let x=Math.floor(s()*t),D=Math.floor(s()*e);Math.hypot(x-a,D-o)<i*1.25||this.stars.push({x,y:D,big:s()<.18,ph:s()*6.28,sp:.6+s()*1.6})}this.bg=this.toCanvas(r);let l=(f,x,D)=>{let G=oe(D),S=new ImageData(f,x),F=S.data,R=[],et=Math.max(5,Math.round(f/18));for(let P=0;P<et;P++){let H=.12+P/(et-1)*.76+(G()-.5)*.06,dt=Math.sin(Math.PI*H);R.push({x:H*f,y:x*(.62-dt*.28-G()*.08),r:x*(.16+dt*.2+G()*.08)})}let ft=f/2,Lt=x*.7,qt=f*.47,vt=x*.24;for(let P=0;P<x;P++)for(let H=0;H<f;H++){let dt=((H-ft)/qt)**2+((P-Lt)/vt)**2<1,Ft=1;for(let $t of R){let Vt=Math.hypot(H-$t.x,P-$t.y)/$t.r;Vt<1&&(dt=!0,Ft=Math.min(Ft,Vt))}if(!dt)continue;let Tt=(1-P/x)*.85+(1-Ft)*.1,K;Tt>.6+q(H,P)*.25?K=m.cloudH:Tt>.36+q(H,P)*.3?K=m.cloudL:Tt>.14+q(H,P)*.3?K=m.cloudM:K=m.cloudD,(H+P)%2&&K===m.cloudH?K=m.cloudL:(H+P)%2&&K===m.cloudL&&(K=m.cloudM);let mt=(P*f+H)*4;F[mt]=K[0],F[mt+1]=K[1],F[mt+2]=K[2],F[mt+3]=255}return this.toCanvas(S)},b=t<260,d=Math.max(110,Math.round(t*(b?.62:.4))),g=f=>Math.round(d*f);this.clouds=[{img:l(d,g(.36),11),x:-d*.2,y:-g(.36)*.38,sp:1.1},{img:l(g(.55),g(.2),23),x:t*.5,y:e*.08,sp:1.5},{img:l(Math.round(d*1.1),g(.4),37),x:t-d*.95,y:e-g(.4)*(b?.45:.72),sp:.9},{img:l(g(.42),g(.17),53),x:t*.02,y:b?e-g(.17)*.6:e*.84,sp:.7}];let w=8,h=(i+w)*2,C=new ImageData(h,h),E=C.data,O=Math.round(i*.86);for(let f=0;f<h;f++)for(let x=0;x<h;x++){let D=x-h/2+.5,G=f-h/2+.5,S=Math.hypot(D,G),F=null;if(S<=i+.5){F=m.disc;let R=S/O;if(R<1){let et=(1-R)*.55+(R>.85?(R-.85)*1.6:0);et>q(x,f)&&(F=et>.5+q(x+2,f)*.3?m.discIn2:m.discIn)}}if(S>i-3.2&&S<=i+.5&&(F=S>i-1.2?m.ring:S>i-2.2?m.ringHot:m.ring),S>i+.5&&S<=i+2.5&&((x+f)%2===0||S<i+1.5)&&(F=m.ringGlow),S>i+2.5&&S<=i+4.5&&x%2===0&&f%2===0&&(F=m.ringDim),S>O-1.6&&S<=O&&(F=m.ring),S>O&&S<=O+1.4&&(x+f)%2===0&&(F=m.ringGlow),F){let R=(f*h+x)*4;E[R]=F[0],E[R+1]=F[1],E[R+2]=F[2],E[R+3]=255}}this.disc=this.toCanvas(C),this.discPad=w;let T=this.rf,_=this.rows=T===2?13:9,v=i*1.62*T,$=i*.34*T,Y=-.3,N=_/2,Q=a*T,ct=(o+i*.12)*T,pt=Math.cos(Y),p=Math.sin(Y),u=720,k=new Float32Array(u+1),z=0;for(let f=1;f<=u;f++){let x=(f-1)/u*2*Math.PI-Math.PI,D=f/u*2*Math.PI-Math.PI;z+=Math.hypot(v*(Math.cos(D)-Math.cos(x)),$*(Math.sin(D)-Math.sin(x))),k[f]=z}this.arcLen=z;let X=Math.ceil(Math.hypot(v,$)+N+2),W=Math.max(0,Math.floor(Q-X)),I=Math.min(t*T-1,Math.ceil(Q+X)),st=Math.max(0,Math.floor(ct-X)),ht=Math.min(e*T-1,Math.ceil(ct+X)),tt=I-W+1,Z=ht-st+1,Yt=[],Ht=[],Gt=[],Kt=[],zt=[],Wt=[];for(let f=st;f<=ht;f++)for(let x=W;x<=I;x++){let D=x+.5-Q,G=f+.5-ct,S=D*pt+G*p,F=-D*p+G*pt,R=Math.hypot(S/v,F/$);if(R===0)continue;let et=Math.hypot(S/(v*v),F/($*$))/R,ft=(R-1)/et;if(Math.abs(ft)>N)continue;let Lt=Math.atan2(F/$,S/v),qt=k[Math.min(u,Math.max(0,Math.round((Lt+Math.PI)/(2*Math.PI)*u)))],vt=F>0;Yt.push((f-st)*tt+(x-W)),Ht.push(Math.abs(S)<v*.9?S:1e9),Wt.push(F-$*Math.sqrt(Math.max(0,1-(S/v)**2))),Gt.push(Math.min(_-1,Math.max(0,Math.floor(ft+N)))),Kt.push(vt?1:0),zt.push((S/v+1)/2)}this.ringMap={x0:W,y0:st,bw:tt,bh:Z,idx:Int32Array.from(Yt),U:Float32Array.from(Ht),V:Uint8Array.from(Gt),F:Uint8Array.from(Kt),L:Float32Array.from(zt),TY:Float32Array.from(Wt)},this.ringBack=new ImageData(tt,Z),this.ringFront=new ImageData(tt,Z),this.ringBackC=document.createElement("canvas"),this.ringBackC.width=tt,this.ringBackC.height=Z,this.ringFrontC=document.createElement("canvas"),this.ringFrontC.width=tt,this.ringFrontC.height=Z,this.bellS=Math.round(i*.9);let ot=Math.ceil(this.bellS*2.9);this.bellC=document.createElement("canvas"),this.bellC.width=ot,this.bellC.height=ot,this.bellImg=new ImageData(ot,ot),this.mask=new Uint8Array(ot*ot),this.lastBellKey="",this.bloom=document.createElement("canvas"),this.bloom.width=Math.max(1,Math.ceil(t/4)),this.bloom.height=Math.max(1,Math.ceil(e/4)),this.bloom2=document.createElement("canvas"),this.bloom2.width=Math.max(1,Math.ceil(t/2)),this.bloom2.height=Math.max(1,Math.ceil(e/2))}toCanvas(t){let e=document.createElement("canvas");return e.width=t.width,e.height=t.height,e.getContext("2d").putImageData(t,0,0),e}static hw(t){if(t<0)return-1;if(t<.16)return .25*Math.sqrt(Math.max(0,1-((.16-t)/.16)**2));if(t<.86){let e=(t-.16)/.7;return .25+.05*e+.17*e*e*e}return t<.97?.5:-1}static part(t,e){let a=Math.hypot(t,(e+.08)*1);if(e<.02&&a<.085&&a>.038)return 3;if(e>=.02||e>=-.005){let i=n.hw(e);if(i>0&&Math.abs(t)<=i)return e>=.86?2:1}return Math.hypot(t,e-1.04)<.085?4:0}drawBell(t){let e=t.toFixed(3);if(e===this.lastBellKey)return;this.lastBellKey=e;let a=this.bellS,o=this.bellC.width,i=this.bellImg,s=i.data,r=this.mask;s.fill(0),r.fill(0);let c=o/2,y=o*.2,l=Math.cos(-t),b=Math.sin(-t),d=new Float32Array(o*o);for(let g=0;g<o;g++)for(let w=0;w<o;w++){let h=w+.5-c,C=g+.5-y,E=h*l-C*b,O=h*b+C*l,T=E/a,_=O/a-.08,v=n.part(T,_);if(!v)continue;let $=g*o+w;r[$]=v;let Y;if(v===1){let N=T/Math.max(.01,n.hw(_));Y=.5-.4*N-.08*_+.5*Math.exp(-(((N+.45)/.14)**2))*(_>.1?1:.6),_<.2&&(Y+=.1*(1-_/.2)),N>.5&&(Y-=.22)}else if(v===2){let N=T/.5;Y=.7-.45*N+(_>.94?-.15:.1)+.35*Math.exp(-(((N+.4)/.2)**2))}else if(v===3)Y=.65-T*4;else{let N=T/.085,Q=(_-1.04)/.085;Y=.75-.5*N-.4*Q}d[$]=Y}for(let g=1;g<o-1;g++)for(let w=1;w<o-1;w++){let h=g*o+w,C=r[h],E=h*4;if(!C){(r[h-1]||r[h+1]||r[h-o]||r[h+o])&&(w+g)%2===0&&(s[E]=m.ringGlow[0],s[E+1]=m.ringGlow[1],s[E+2]=m.ringGlow[2],s[E+3]=255);continue}let O=!r[h-1]||!r[h+1]||!r[h-o]||!r[h+o]||C===2&&r[h-o]===1||C===4&&r[h-o]===2,T;if(O)T=m.neon;else{let v=Math.max(0,Math.min(.999,d[h]))*(Nt.length-1),$=Math.floor(v);T=Nt[Math.min(Nt.length-1,$+(v-$>q(w,g)?1:0))]}s[E]=T[0],s[E+1]=T[1],s[E+2]=T[2],s[E+3]=255}this.bellC.getContext("2d").putImageData(i,0,0),this.bellPivot={x:c,y}}ring(t=performance.now(),e=1){this.ringStart=t,this.ringUntil=t+2600*e,this.vel+=(this.angle>0?-1:1)*.9*e}frame(t){let{ctx:e,W:a,H:o,R:i,cx:s,cy:r}=this,c=(t-this.t0)/1e3,y=Math.min(.05,(t-(this.prev||t))/1e3);this.prev=t;let l=t<this.ringUntil;if(!this.reduced){let u=l?1.2:2.4;this.vel+=(-26*this.angle-u*this.vel)*y,this.angle+=this.vel*y,!l&&Math.abs(this.vel)<.02&&(this.angle+=(Math.sin(c*.9)*.025-this.angle)*y*.8)}let b=0;l&&!this.reduced&&(b=(Math.floor(t/40)%2?1:-1)*(t-this.ringStart<1800?1:0)),e.setTransform(this.rf,0,0,this.rf,0,0),e.imageSmoothingEnabled=!1,e.drawImage(this.bg,0,0);for(let p of this.stars){let u=this.reduced?1:.5+.5*Math.sin(c*p.sp+p.ph);e.fillStyle=u>.75?"#FFFFFF":u>.35?"#BFD8C8":"#4C6655";let k=p.big&&u>.5?2:1;e.fillRect(p.x,p.y,k,k)}for(let p of this.clouds){let u=a+p.img.width,k=this.reduced?p.x:((p.x+c*p.sp*1.5+p.img.width)%u+u)%u-p.img.width;e.drawImage(p.img,Math.round(k),Math.round(p.y))}let d=this.ringMap,g=this.tape;this.reduced||(this.tapeOffset=(this.tapeOffset+y*14)%(g.w||1));let w=this.tapeOffset,h=this.rows,C=h-1,E=this.ringBack.data,O=this.ringFront.data;E.fill(0),O.fill(0);for(let p=0;p<d.idx.length;p++){let u=d.idx[p]*4,k=d.V[p],z=d.F[p],X=d.idx[p]%d.bw,W=d.idx[p]/d.bw|0,I;if(z){if(k===0)I=m.ringHot;else if(k===C)I=m.ringGlow;else{let st=d.U[p],ht=0;if(st<1e8){let tt=Math.floor(((st+w*this.rf)%g.w+g.w)%g.w),Z=Math.floor(d.TY[p]+3.5);ht=Z>=0&&Z<7&&g.bits[Z*g.w+tt]}I=ht?m.ink:d.L[p]>.55+q(X,W)*.3?m.ring:m.ringMid}O[u]=I[0],O[u+1]=I[1],O[u+2]=I[2],O[u+3]=255}else I=k===0||k===C?m.ringDim:d.L[p]>.5?m.ringMid:m.ringGlow,k>0&&k<C&&(X+W)%2===0&&(I=m.ringGlow),E[u]=I[0],E[u+1]=I[1],E[u+2]=I[2],E[u+3]=255}this.ringBackC.getContext("2d").putImageData(this.ringBack,0,0),this.ringFrontC.getContext("2d").putImageData(this.ringFront,0,0),e.imageSmoothingEnabled=!1,e.drawImage(this.ringBackC,d.x0/this.rf,d.y0/this.rf,d.bw/this.rf,d.bh/this.rf);let v=this.disc.width;e.drawImage(this.disc,s-v/2,r-v/2);let $=this.drawArrow(e,c);this.drawBell(this.reduced?0:this.angle);let Y=this.bellC.width,N=Math.round(s-this.bellPivot.x+b),Q=Math.round(r-this.bellS*.58-this.bellPivot.y);if(e.drawImage(this.bellC,N,Q),l){let p=(t-this.ringStart)/1e3;e.fillStyle="#86EFAC";for(let u=0;u<3;u++){let k=(p*40+u*9)%30+this.bellS*.62;if(!(k>i*.84))for(let z=-1.2;z<=1.2;z+=.08)for(let X of[-1,1]){let W=Math.round(s+X*Math.cos(z)*k),I=Math.round(r+Math.sin(z)*k*.9);(W+I&1)===0&&e.fillRect(W,I,1,1)}}}e.drawImage(this.ringFrontC,d.x0/this.rf,d.y0/this.rf,d.bw/this.rf,d.bh/this.rf);let ct=this.bloom.getContext("2d"),pt=this.bloom2.getContext("2d");for(let[p,u]of[[ct,4],[pt,2]])p.globalCompositeOperation="source-over",p.fillStyle="#000",p.fillRect(0,0,p.canvas.width,p.canvas.height),p.imageSmoothingEnabled=!0,p.drawImage(this.disc,(s-v/2)/u,(r-v/2)/u,v/u,v/u),p.drawImage(this.bellC,N/u,Q/u,Y/u,Y/u),p.drawImage(this.ringFrontC,d.x0/u/this.rf,d.y0/u/this.rf,d.bw/u/this.rf,d.bh/u/this.rf),$&&p.drawImage($.c,$.x/u,$.y/u,$.c.width/u,$.c.height/u);e.save(),e.imageSmoothingEnabled=!0,e.globalCompositeOperation="lighter",e.globalAlpha=l?.55:.38,e.drawImage(this.bloom,0,0,a,o),e.globalAlpha=.22,e.drawImage(this.bloom2,0,0,a,o),e.restore()}drawArrow(t,e){let{R:a,cx:o,cy:i}=this,s=Math.max(5,Math.round(a*.09))|1,r=Math.round(a*.62);(!this.arrowC||this.arrowC.width!==s*3)&&(this.arrowC=document.createElement("canvas"),this.arrowC.width=s*3,this.arrowC.height=r+s*2);let c=this.arrowC.getContext("2d");c.clearRect(0,0,this.arrowC.width,this.arrowC.height);let y=s*3,l=Math.round(s*1.4);for(let h=0;h<l;h++){let C=Math.round(h/l*(y/2));c.fillStyle=h<2?"#B9FFD6":"#22F08A",c.fillRect(Math.round(y/2)-C,h,C*2||1,1),c.fillStyle="#E8FFF0",c.fillRect(Math.round(y/2)-C,h,1,1)}let b=Math.round(y/2-s/2);for(let h=l;h<r+s*2;h++){let C=(h-l)/(r+s*2-l);for(let E=0;E<s;E++)C>.55&&q(E,h+Math.floor(e*12))<(C-.55)*2.2||(c.fillStyle=E===0?"#D9FFE8":E===s-1?"#0FBF66":"#22F08A",c.fillRect(b+E,h,1,1))}let d=this.reduced?0:Math.round(Math.sin(e*1.6)*1.5)-1,g=Math.round(o+a*.38),w=Math.round(i-a*.62+d);return t.drawImage(this.arrowC,g,w),{c:this.arrowC,x:g,y:w}}};var Mt=class{constructor(){this.ctx=null,this.on=!0}unlock(){if(!this.ctx){let t=window.AudioContext||window.webkitAudioContext;if(!t)return!1;this.ctx=new t,this.master=this.ctx.createGain(),this.master.gain.value=.22;let e=this.ctx.createDynamicsCompressor();this.master.connect(e),e.connect(this.ctx.destination)}return this.ctx.state==="suspended"&&this.ctx.resume(),!0}get ready(){return!!this.ctx&&this.ctx.state==="running"}ring(t=2.2){if(!this.on||!this.ctx)return;let e=this.ctx,a=e.currentTime+.02,o=1046,i=[[1,1],[2.32,.55],[4.25,.32],[5.4,.2],[6.79,.12],[.5,.25]],s=e.createGain();s.gain.value=0,s.connect(this.master);let r=i.map(([w,h])=>{let C=e.createOscillator();C.type="sine",C.frequency.value=o*w*(1+(Math.random()-.5)*.002);let E=e.createGain();return E.gain.value=h,C.connect(E),E.connect(s),C.start(a),C.stop(a+t+2.2),C}),c=18,y=Math.floor(t*c);for(let w=0;w<y;w++){let h=a+w/c;s.gain.setValueAtTime(Math.max(1e-4,s.gain.value),h),s.gain.linearRampToValueAtTime(1,h+.004),s.gain.exponentialRampToValueAtTime(.35,h+1/c-.002)}let l=a+y/c;s.gain.setValueAtTime(.9,l),s.gain.exponentialRampToValueAtTime(1e-4,l+2);let b=441,d=e.createBuffer(1,b,44100),g=d.getChannelData(0);for(let w=0;w<b;w++)g[w]=(Math.random()*2-1)*(1-w/b);for(let w=0;w<y;w+=1){let h=e.createBufferSource();h.buffer=d;let C=e.createGain();C.gain.value=.18,h.connect(C),C.connect(this.master),h.start(a+w/c)}return r}};var U=Object.assign({NAME:"OPENBELL",TICKER:"OPENBELL",CA:"",CHAIN:"solana",PAD:"pumpfun",X:"",BUY:"",CHART:"",TREASURY:""},window.OPENBELL_CFG||{}),L=(n,t=document)=>t.querySelector(n),j=(n,t=document)=>[...t.querySelectorAll(n)],Pt=matchMedia("(prefers-reduced-motion: reduce)").matches,A=n=>String(n??"").replace(/[&<>"']/g,t=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[t]),St=n=>n==null?"\u2014":n>=1e3?"$"+n.toLocaleString("en-US",{maximumFractionDigits:2,minimumFractionDigits:2}):n>=1?"$"+n.toFixed(2):"$"+n.toPrecision(4),ie=n=>n==null?"\u2014":n>=1e9?"$"+(n/1e9).toFixed(2)+"B":n>=1e6?"$"+(n/1e6).toFixed(2)+"M":n>=1e3?"$"+(n/1e3).toFixed(1)+"K":"$"+n.toFixed(0),rt=n=>n==null?"\u2014":(n>0?"+":n<0?"\u2212":"")+Math.abs(n/100).toFixed(2)+"%",Et=n=>{let t=Number(n)/1e9;return(t<0?"\u2212":"")+Math.abs(t).toLocaleString("en-US",{maximumFractionDigits:4})+" SOL"},we=new Intl.DateTimeFormat("en-US",{timeZone:kt,weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}),lt=n=>we.format(new Date(n)).replace(",","")+" ET",it=n=>String(n).padStart(2,"0");function Me(){let n=(U.CA||"").trim(),t=U.BUY||(n?`https://pump.fun/coin/${n}`:"https://pump.fun"),e=U.CHART||(n?`https://gmgn.ai/sol/token/${n}`:"");j("[data-buy]").forEach(a=>a.href=t),j("[data-chart]").forEach(a=>{e?a.href=e:a.hidden=!0}),j("[data-x]").forEach(a=>{U.X?a.href=U.X:a.hidden=!0}),j("[data-ticker]").forEach(a=>a.textContent="$"+U.TICKER),j("[data-ca]").forEach(a=>{let o=a.querySelector(".ca-v");if(!n){o.textContent="CA: TBA",a.disabled=!0;return}o.textContent=n.slice(0,4)+"\u2026"+n.slice(-4),a.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(n)}catch{let i=document.createElement("textarea");i.value=n,document.body.append(i),i.select(),document.execCommand("copy"),i.remove()}o.textContent="COPIED",setTimeout(()=>o.textContent=n.slice(0,4)+"\u2026"+n.slice(-4),1400)})})}var V=new Mt,J;function re(n=1,t){J?.ring(performance.now(),n),V.ring(1.4+n*1.2),t&&Ut(t)}function Ut(n){let t=L("#toast");t.textContent=n,t.hidden=!1,clearTimeout(Ut.t),Ut.t=setTimeout(()=>t.hidden=!0,4200)}function Ee(){let n=L("#sky"),t=L("#stage"),e=L("#bellbtn");J=new wt(n,t,{reduced:Pt});let a=()=>{J.resize();let r=J.discRectCss();Object.assign(e.style,{left:r.x+"px",top:r.y+"px",width:r.d+"px",height:r.d+"px"});let c=L(".hint");c&&Object.assign(c.style,{left:r.x+r.d/2+"px",top:r.y+r.d+18+"px",bottom:"auto"})};a();let o;addEventListener("resize",()=>{clearTimeout(o),o=setTimeout(a,120)}),e.addEventListener("click",()=>{V.unlock(),re(1)});let i=!0;new IntersectionObserver(([r])=>i=r.isIntersecting).observe(n.parentElement);let s=r=>{i&&!document.hidden&&J.frame(r),Pt||requestAnimationFrame(s)};Pt?(J.frame(performance.now()),setInterval(()=>i&&J.frame(performance.now()),1e3)):requestAnimationFrame(s)}function Se(){let n=L("#sound"),t=()=>{n.setAttribute("aria-pressed",String(V.on)),n.querySelector("span").textContent=V.on?V.ctx?"SOUND ON":"TAP FOR SOUND":"SOUND OFF"};addEventListener("pointerdown",()=>{V.unlock(),t()},{once:!0,capture:!0}),n.addEventListener("click",()=>{V.ctx?V.on=!V.on:V.unlock(),t()}),t()}var ae=Date.now();function Ce(n){let t=L("#cd"),e=t.getContext("2d"),a=se(n)+2,o=9;t.width!==a&&(t.width=a,t.height=o,t.style.aspectRatio=`${a} / ${o}`),e.clearRect(0,0,a,o),e.fillStyle="#0F5132",xt(e,n,2,2),e.fillStyle="#86EFAC",xt(e,n,1,1),e.fillStyle="#F2FFF6",e.save(),e.beginPath(),e.rect(0,1,a,1),e.clip(),xt(e,n,1,1),e.restore()}function le(){let n=Date.now(),t=Rt(n),e=L("#chip"),a=t.state==="OPEN"?"MARKET OPEN":t.state==="WEEKEND"?"WEEKEND":"MARKET CLOSED",o=t.state==="HOLIDAY"?"HOLIDAY":t.phase==="PRE"?"PRE-MARKET":t.phase==="AFTER"?"AFTER HOURS":"";e.dataset.state=t.state,e.querySelector(".chip-l").textContent=a,e.querySelector(".chip-s").textContent=o,e.querySelector(".chip-s").hidden=!o;let i=nt(n);L("#nyclock").textContent=`NEW YORK ${it(i.h)}:${it(i.mi)}:${it(i.s)} ET`;let s=t.state==="OPEN"?t.nextClose:t.nextOpen;if(L("#cdlabel").textContent=t.state==="OPEN"?t.nextCloseEarly?"EARLY CLOSING BELL IN":"CLOSING BELL IN":"NEXT OPENING BELL IN",L("#cdwhen").textContent=s?lt(s):"",s){let r=Math.max(0,Math.floor((s-n)/1e3)),c=Math.floor(r/86400);r-=c*86400;let y=Math.floor(r/3600);r-=y*3600;let l=Math.floor(r/60);r-=l*60,Ce(`${c?c+"D ":""}${it(y)}:${it(l)}:${it(r)}`)}for(let r of te(ae,n))re(1.6,r.type==="OPEN"?"OPENING BELL \xB7 09:30 ET":"CLOSING BELL");ae=n,M.market=t,Ct()}var M={board:null,boardErr:null,sort:{key:"gapBps",dir:1},filter:"all",treasury:null,market:null};function Ct(){if(!J)return;let n=M.market,t=n?n.state==="OPEN"?"MARKET OPEN":`NEXT BELL ${lt(n.nextOpen).toUpperCase()}`:"OPENBELL",e="",a=M.board?.rows?.filter(i=>i.gapBps!=null)||[];a.length&&(e=[...a].sort((i,s)=>Math.abs(s.gapBps)-Math.abs(i.gapBps)).slice(0,14).map(i=>`${i.target?"*":""}${i.symbol} ${(i.gapBps>0?"+":i.gapBps<0?"-":"")+Math.abs(i.gapBps/100).toFixed(2)}%`).join("   "));let o=`   ${t.replace(/,/g,"")}   |   ${e?e+"   |   ":""}$${U.TICKER}   |`;o!==Ct.last&&(J.setTape(o),Ct.last=o)}async function ce(){try{let t=await(await fetch("/api/board",{cache:"no-store"})).json();if(!t.ok)throw new Error(t.error||"board");M.board=t,M.boardErr=null}catch(n){M.boardErr=String(n.message||n)}Bt(),he(),_t(),Ct()}function Be(n=8){return Array.from({length:n},()=>'<tr class="sk"><td><span class="shim w1"></span></td><td><span class="shim w3"></span></td><td><span class="shim w2"></span></td><td><span class="shim w2"></span></td><td><span class="shim w2"></span></td></tr>').join("")}function Bt(){let n=L("#board tbody"),t=L("#boardmeta"),e=L("#boardnote"),a=M.market?.state==="OPEN";if(L("#th-real .lbl").textContent=a?"Real (live)":"Real close",j("#board thead button").forEach(l=>{let b=l.dataset.k===M.sort.key;l.closest("th").setAttribute("aria-sort",b?M.sort.dir>0?"ascending":"descending":"none"),l.querySelector(".arr").textContent=b?M.sort.dir>0?"\u25B2":"\u25BC":""}),!M.board){n.innerHTML=Be(),t.innerHTML='<span class="shim w4"></span>',e.hidden=!M.boardErr,e.textContent=M.boardErr?"Board feed unreachable from here. Retrying every 30 s.":"";return}e.hidden=!M.boardErr,e.textContent=M.boardErr?"Last refresh failed. Showing the previous board; retrying every 30 s.":"";let o=M.board.rows.filter(l=>M.filter==="all"||l.category===M.filter),{key:i,dir:s}=M.sort;o=[...o].sort((l,b)=>{let d=l[i],g=b[i];return d==null&&g==null?0:d==null?1:g==null?-1:(typeof d=="string"?d.localeCompare(g):d-g)*s});let r=Math.max(200,...o.map(l=>Math.abs(l.gapBps||0)));n.innerHTML=o.length?o.map(l=>{let b=l.gapBps,d=[l.target?"target":"",b!=null&&b<=It.ENTRY_GAP_BPS?"deep":"",b!=null&&b<0?"neg":b>0?"pos":""].join(" "),g=b==null?"":`<span class="bar ${b<0?"l":"r"}" style="--w:${Math.min(50,Math.abs(b)/r*50).toFixed(1)}%"></span>`,w=l.realTime?`<small>${A(lt(l.realTime).replace(" ET",""))} \xB7 ${A(l.realSource)}</small>`:"<small>no fresh close</small>",h=l.icon?`<img src="${A(l.icon)}" alt="" width="28" height="28" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'mono-ic',textContent:'${A(l.symbol.slice(0,2))}'}))">`:`<span class="mono-ic">${A(l.symbol.slice(0,2))}</span>`;return`<tr class="${d}">
+      <td><div class="tok">${h}<div><b>${A(l.symbol)}</b>${l.target?'<em class="tag">TREASURY TARGET</em>':""}<small>${A(l.name||l.ticker||"")}</small></div></div></td>
+      <td class="n gap"><span class="gv">${rt(b)}</span><span class="track">${g}</span></td>
+      <td class="n">${St(l.onchain)}</td>
+      <td class="n">${St(l.real)}${w}</td>
+      <td class="n">${ie(l.vol24h)}${l.vol24h!=null&&l.vol24h<It.MIN_VOL_USD?"<small>below $50K floor</small>":""}</td>
+    </tr>`}).join(""):'<tr><td colspan="5" class="empty">No tokenized stocks in this filter right now.</td></tr>';let c=M.board.rows.filter(l=>l.gapBps!=null),y=c.reduce((l,b)=>!l||b.gapBps<l.gapBps?b:l,null);t.innerHTML=`<span><b>${M.board.rows.length}</b> tokenized stocks</span><span><b>${c.length}</b> with a fresh real price</span>${y?`<span>deepest gap <b>${A(y.symbol)} ${rt(y.gapBps)}</b></span>`:""}<span>updated ${A(lt(M.board.updatedAt))}</span>`}function he(){let n=L("#nexttarget");if(!M.board){n.innerHTML='<span class="shim w4"></span><span class="shim w2"></span>';return}let t=M.board.rows.find(e=>e.target);n.innerHTML=t?`<div class="nt-sym">${A(t.symbol)}</div><div class="nt-row"><span>gap</span><b>${rt(t.gapBps)}</b></div><div class="nt-row"><span>on-chain</span><b>${St(t.onchain)}</b></div><div class="nt-row"><span>real close</span><b>${St(t.real)}</b></div><div class="nt-row"><span>24h vol</span><b>${ie(t.vol24h)}</b></div><code>OPENBELL|BUY|${A(t.symbol)}|${Math.round(t.gapBps)}</code>`:'<p class="nt-none">No tokenized stock is at \u22121.50% or deeper with $50K+ volume right now. The treasury waits.</p>'}async function de(){if(U.TREASURY){try{let t=await(await fetch(`/api/treasury?wallet=${encodeURIComponent(U.TREASURY)}`,{cache:"no-store"})).json();if(!t.ok)throw new Error(t.error);M.treasury=t,M.treasuryErr=null}catch(n){M.treasuryErr=String(n.message||n)}_t()}}function _t(){let n=L("#tlive"),t=L("#tempty");if(!U.TREASURY){n.hidden=!0,t.hidden=!1;return}t.hidden=!0,n.hidden=!1;let e=M.treasury;if(L("#twallet").href=`https://solscan.io/account/${U.TREASURY}`,L("#twallet").textContent=U.TREASURY.slice(0,4)+"\u2026"+U.TREASURY.slice(-4),!e){j("#tlive [data-f]").forEach(s=>s.innerHTML='<span class="shim w2"></span>'),L("#tnote").hidden=!M.treasuryErr,L("#tnote").textContent=M.treasuryErr?"Treasury feed unreachable. Retrying every 30 s.":"";return}L("#tnote").hidden=!0;let a=(s,r)=>L(`#tlive [data-f="${s}"]`).innerHTML=r;a("sol",Et(e.solLamports)),a("realized",Et(e.totals.realizedPnlLamports)),a("burned",(Number(e.totals.burnedRaw)/1e6).toLocaleString("en-US",{maximumFractionDigits:0})+" <small>$"+A(U.TICKER)+"</small>"),a("trades",`${e.totals.buys} buys \xB7 ${e.totals.sells} sells`);let o=e.position;if(!o)a("position",'<p class="nt-none">Flat. The next buy follows the target on the board.</p>');else{let s=M.board?.rows?.find(d=>d.symbol===o.symbol),r=s?e.holdings.find(d=>d.mint===s.mint):null,c=r&&s?.onchain?Number(r.amount)*s.onchain:null,y=o.costLamports&&e.solUsd?Number(o.costLamports)/1e9*e.solUsd:null,l=c!=null&&y?c-y:null,b=o.time?ee(o.time):null;a("position",`<div class="nt-sym">${A(o.symbol)}</div>
+      <div class="nt-row"><span>entry gap</span><b>${rt(o.gapBps)}</b></div>
+      <div class="nt-row"><span>gap now</span><b>${rt(s?.gapBps)}</b></div>
+      <div class="nt-row"><span>cost</span><b>${o.costLamports?Et(o.costLamports):"\u2014"}</b></div>
+      <div class="nt-row"><span>live PnL</span><b class="${l==null?"":l>=0?"up":"dn"}">${l==null?"\u2014":(l>=0?"+":"\u2212")+"$"+Math.abs(l).toFixed(2)+" ("+(l/y*100).toFixed(2)+"%)"}</b></div>
+      <div class="nt-row"><span>sells by</span><b>${b?A(lt(b)):"\u2014"}</b></div>
+      <a class="sol" href="https://solscan.io/tx/${A(o.sig)}" target="_blank" rel="noopener">entry tx \u2197</a>`)}let i=L("#thist");i.innerHTML=e.history.length?e.history.map(s=>{let r=s.type==="BUY"?`${A(s.symbol)} at ${rt(s.gapBps)}`:s.type==="SELL"?`${A(s.symbol)} \xB7 PnL ${Et(s.pnlLamports)}`:`${(Number(s.amountRaw)/1e6).toLocaleString("en-US",{maximumFractionDigits:0})} $${A(U.TICKER)}`;return`<li><span class="ev ${s.type.toLowerCase()}">${s.type}</span><span class="d">${r}</span><span class="t">${s.time?A(lt(s.time)):""}</span><a href="https://solscan.io/tx/${A(s.sig)}" target="_blank" rel="noopener" aria-label="View on Solscan">Solscan \u2197</a></li>`}).join(""):'<li class="empty">The treasury makes its first buy after launch.</li>'}function Le(){j("#board thead button").forEach(n=>n.addEventListener("click",()=>{let t=n.dataset.k;M.sort=M.sort.key===t?{key:t,dir:-M.sort.dir}:{key:t,dir:t==="gapBps"?1:-1},Bt()})),j(".filters button").forEach(n=>n.addEventListener("click",()=>{M.filter=n.dataset.f,j(".filters button").forEach(t=>t.setAttribute("aria-pressed",String(t===n))),Bt()}))}Me();Se();Le();try{Ee()}catch(n){console.error(n)}le();setInterval(le,500);Bt();he();_t();ce();setInterval(ce,3e4);de();setInterval(de,3e4);L("#yr").textContent=new Date().getFullYear();})();
+</script>
+</body>
+</html>
