@@ -1,1 +1,1 @@
-window.OPENBELL_CFG={NAME:"OPENBELL",TICKER:"OPENBELL",CA:"",CHAIN:"solana",PAD:"pumpfun",X:"",BUY:"",CHART:"",TREASURY:""};
+window.OPENBELL_CFG={NAME:"OPENBELL",TICKER:"OPENBELL",CA:"8Sb1jGCyzobzsNs9CbpuRnytHYP5HKvUYQe2K67Tpump",CHAIN:"solana",PAD:"pumpfun",X:"https://x.com/OPENBELLpf",BUY:"https://pump.fun/coin/8Sb1jGCyzobzsNs9CbpuRnytHYP5HKvUYQe2K67Tpump",CHART:"https://gmgn.ai/sol/token/8Sb1jGCyzobzsNs9CbpuRnytHYP5HKvUYQe2K67Tpump",TREASURY:""};
